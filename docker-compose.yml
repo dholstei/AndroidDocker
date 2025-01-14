@@ -1,0 +1,44 @@
+services:
+  android_devel:
+    image: android_dev:latest
+    volumes:
+      - /home/danny/Android:/home/danny/Android
+      - /home/danny/bin/android-studio:/home/danny/bin/android-studio
+      - /home/danny/.android:/home/danny/.android
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY}
+    entrypoint: /home/danny/bin/android-studio/bin/studio
+    devices:
+      - /dev/kvm:/dev/kvm
+
+  android_emu:
+    image: android_dev:latest
+    volumes:
+      - /home/danny/Android:/root/Android
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY}
+    entrypoint: ./android_env.sh container_stuff
+    devices:
+      - /dev/kvm:/dev/kvm
+    ports:
+      - "2222:22"
+      - "5554:5554"
+      - "5555:5555"
+
+  interactive:
+    image: android_dev:latest
+    volumes:
+      - /home/danny/Android:/root/Android
+      - /home/danny/bin/android-studio:/root/bin/android-studio
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY}
+    entrypoint: bash
+    devices:
+      - /dev/kvm:/dev/kvm
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    ports:
+      - "2222:22"
