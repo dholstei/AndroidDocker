@@ -15,9 +15,10 @@ RUN tar xvf avd.tar.xz -C /root;
 RUN tar xvf skins.tar.xz -C /root;
 
 RUN mkdir /var/run/sshd
-# CMD ["/usr/sbin/sshd", "-D"]
 
 #   Replicate user
 ARG UID_ HOME_ SHELL_ USER_ FULLNAME
+RUN echo "useradd -r -u $UID_ -m -d $HOME_ -s $SHELL_ -c "$FULLNAME" $USER_"
 RUN useradd -r -u $UID_ -m -d $HOME_ -s $SHELL_ -c "$FULLNAME" $USER_
 COPY $SCRIPT /
+USER $USER_

@@ -1,19 +1,21 @@
 services:
   android_devel:
     image: android_dev:latest
+    build:
+      dockerfile: dockerfile
     volumes:
-      - /home/danny/Android:/home/danny/Android
-      - /home/danny/bin/android-studio:/home/danny/bin/android-studio
-      - /home/danny/.android:/home/danny/.android
+      - /home/danny/:/home/danny/
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - DISPLAY=${DISPLAY}
-    entrypoint: /home/danny/bin/android-studio/bin/studio
+    entrypoint: ./android_env.sh android_studio
     devices:
       - /dev/kvm:/dev/kvm
 
   android_emu:
     image: android_dev:latest
+    build:
+      dockerfile: dockerfile
     volumes:
       - /home/danny/Android:/root/Android
       - /tmp/.X11-unix:/tmp/.X11-unix
@@ -29,6 +31,8 @@ services:
 
   interactive:
     image: android_dev:latest
+    build:
+      dockerfile: dockerfile
     volumes:
       - /home/danny/Android:/root/Android
       - /home/danny/bin/android-studio:/root/bin/android-studio

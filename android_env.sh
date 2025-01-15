@@ -103,14 +103,16 @@ function docker_compose() {
 function docker_build() {
     docker_cmd $DOCKER;
     if [ $? -eq 0 ]; then echo "--- INFO: \"$DOCKER\" Version "$VERSION" ---" | LOGGER $(($LINENO-1)); else exit 1; fi
+    check_build;
+    check_cmd "$DOCKER build -t $TAG $(build_args SCRIPT UID_ HOME_ SHELL_ USER_)" .;
+    docker system prune -f > /dev/null
+}
+
+#   Check docker build environment.  Internal only.
+function check_build() {
     DF="dockerfile"; check_file $DF
     if [ -z "${FULLNAME}" ]; then FULLNAME="$(getent passwd | grep $USER | cut -d : -f 5)"; fi
     UID_=$UID; HOME_=$HOME; USER_=$USER; SHELL_=$SHELL
-    CMD="$DOCKER build -t $TAG $(build_args SCRIPT UID_ HOME_ SHELL_ USER_)"
-    if $CMD .;
-        then echo "--- INFO: \"$CMD\" in $PWD success. ---" | LOGGER $(($LINENO-1));
-        else echo "--- ERROR: \"$CMD\" in $PWD failure! ---" | LOGGER $(($LINENO-2)); exit 1; fi;
-    docker system prune -f > /dev/null
 }
 
 #   Launch container, do stuff
@@ -121,10 +123,7 @@ function docker_run() {
     echo "--- INFO: Launch from image: \"$($DOCKER images $TAG | tail -1)\" ---" | LOGGER $LINENO;
 
     ARGLIST="--env DISPLAY=$DISPLAY --volume /tmp/.X11-unix:/tmp/.X11-unix --device /dev/kvm"; xhost local: > /dev/null;
-    CMD="$DOCKER run $DOCKEXTRA $ARGLIST --volume $(realpath ./$DEST):/$DEST $TAG $DOCKSCRIPT"
-    if $CMD;
-        then echo "--- INFO: \"$CMD\" in $PWD success. ---" | LOGGER $(($LINENO-1));
-        else echo "--- ERROR: \"$CMD\" in $PWD failure! ---" | LOGGER $(($LINENO-2)); exit 1; fi;
+    check_cmd "$DOCKER run $DOCKEXTRA $ARGLIST --volume $(realpath ./$DEST):/$DEST $TAG $DOCKSCRIPT";
     $DOCKER system prune -f > /dev/null
 }
 
@@ -158,11 +157,7 @@ function compose_run() {
     check_service $SERVICE
 
     xhost local:;
-    CMD="$DOCKERCOMPOSE up --remove-orphans $SERVICE"
-    echo $CMD
-    if $CMD;
-        then echo "--- INFO: \"$CMD\" in $PWD success. ---" | LOGGER $(($LINENO-1));
-        else echo "--- ERROR: \"$CMD\" in $PWD failure! ---" | LOGGER $(($LINENO-2)); exit 1; fi;
+    check_cmd "$DOCKERCOMPOSE up --remove-orphans $SERVICE";
     docker system prune -f > /dev/null
 }
 
@@ -201,12 +196,18 @@ function container_stuff() {
     check_cmd "root/Android/Sdk/emulator/emulator -avd Pixel_7_API_35";
 }
 
+#   Launch Android Studio
+function android_studio() {
+    check_cmd "cd /home/danny"
+    check_cmd "/home/danny/bin/android-studio/bin/studio";
+}
+
 function trim_white() { echo "$1" | awk '$1=$1'; }
 
 #   List declared functions for this script.
 function list_functions() {
     FUNCTIONS=`declare -F | awk '{if ($2=="-f") printf "%s ", $3;}'`
-    BLACKLIST="list_functions LOGGER usage trim_white ctrl_c"
+    BLACKLIST="list_functions LOGGER usage trim_white ctrl_c check_build"
     for Word in $BLACKLIST; do
         FUNCTIONS=${FUNCTIONS//"$Word"/}
     done

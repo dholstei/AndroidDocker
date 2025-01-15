@@ -2,8 +2,9 @@
 
 ## android_env.sh
 
-Build ARG list for Docker. NOTE: No protection against blank values
+Setup libs and emulator for Android
 
+### Functions:
 - `check_dest`:
 Check for valid copy/move destination
 
